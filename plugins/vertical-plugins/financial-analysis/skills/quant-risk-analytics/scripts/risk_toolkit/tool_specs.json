@@ -1,0 +1,1128 @@
+{
+  "schema_version": "1.0",
+  "tasks": [
+    {
+      "name": "data.fetch_prices",
+      "description": "Load prices from CSV or remote source (Yahoo/FRED).",
+      "module": "data",
+      "handler": "fetch_prices",
+      "tags": [
+        "data"
+      ],
+      "input_schema": {
+        "tickers": "list[str]",
+        "start": "YYYY-MM-DD",
+        "end": "YYYY-MM-DD",
+        "source": "yahoo|fred|csv",
+        "local_path": "optional path to CSV",
+        "date_col": "optional date column name",
+        "price_field": "Adj Close"
+      },
+      "output_schema": {
+        "prices": "records (index, columns, data)",
+        "summary": "dict (rows, columns)",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "data.load_dataset",
+      "description": "Load a named dataset or local file into records (requires local_path; no datasets bundled).",
+      "module": "data",
+      "handler": "load_dataset",
+      "tags": [
+        "data"
+      ],
+      "input_schema": {
+        "name": "str (built-in dataset name)",
+        "local_path": "optional path to CSV/XLSX",
+        "date_col": "optional date column name",
+        "sheet_name": "optional Excel sheet name"
+      },
+      "output_schema": {
+        "data": "records (index, columns, data)",
+        "summary": "dict (rows, columns, path)",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "data.price_mean",
+      "description": "Mean price per column.",
+      "module": "data",
+      "handler": "price_mean",
+      "tags": [
+        "data"
+      ],
+      "input_schema": {
+        "prices": "records (index, columns, data) or DataFrame",
+        "tickers": "list[str]",
+        "start": "YYYY-MM-DD",
+        "end": "YYYY-MM-DD",
+        "source": "yahoo|fred|csv",
+        "local_path": "optional path to CSV",
+        "date_col": "optional date column name",
+        "price_field": "Adj Close"
+      },
+      "output_schema": {
+        "mean": "dict",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "data.price_period_means",
+      "description": "Mean prices by resampled period.",
+      "module": "data",
+      "handler": "price_period_means",
+      "tags": [
+        "data"
+      ],
+      "input_schema": {
+        "prices": "records (index, columns, data) or DataFrame",
+        "tickers": "list[str]",
+        "start": "YYYY-MM-DD",
+        "end": "YYYY-MM-DD",
+        "source": "yahoo|fred|csv",
+        "local_path": "optional path to CSV",
+        "date_col": "optional date column name",
+        "price_field": "Adj Close",
+        "freq": "str (e.g., M, Q, A)"
+      },
+      "output_schema": {
+        "means": "records (index, columns, data)",
+        "summary": "dict (periods, columns, freq)",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "returns.basic_stats",
+      "description": "Compute returns plus volatility, covariance, and correlation.",
+      "module": "returns",
+      "handler": "basic_stats",
+      "tags": [
+        "returns"
+      ],
+      "input_schema": {
+        "prices": "records (index, columns, data) or DataFrame",
+        "tickers": "list[str]",
+        "start": "YYYY-MM-DD",
+        "end": "YYYY-MM-DD",
+        "source": "yahoo|fred|csv",
+        "local_path": "optional path to CSV",
+        "date_col": "optional date column name",
+        "price_field": "Adj Close",
+        "returns_type": "log|simple",
+        "annualization_factor": "float",
+        "freq": "str (e.g., D, M, Q)",
+        "resample_method": "ffill|last",
+        "dropna": "bool"
+      },
+      "output_schema": {
+        "returns": "records (index, columns, data)",
+        "volatility": "dict",
+        "covariance": "records (index, columns, data)",
+        "correlation": "records (index, columns, data)",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "returns.compute_returns",
+      "description": "Compute log or simple returns from price series.",
+      "module": "returns",
+      "handler": "compute_returns",
+      "tags": [
+        "returns"
+      ],
+      "input_schema": {
+        "prices": "records (index, columns, data) or DataFrame",
+        "tickers": "list[str]",
+        "start": "YYYY-MM-DD",
+        "end": "YYYY-MM-DD",
+        "source": "yahoo|fred|csv",
+        "local_path": "optional path to CSV",
+        "date_col": "optional date column name",
+        "price_field": "Adj Close",
+        "returns_type": "log|simple",
+        "freq": "str (e.g., D, M, Q)",
+        "resample_method": "ffill|last",
+        "cumulative": "bool",
+        "dropna": "bool"
+      },
+      "output_schema": {
+        "returns": "records (index, columns, data)",
+        "cumulative": "records (optional)",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "volatility.arch_garch_fit",
+      "description": "Fit ARCH/GARCH model and return parameters.",
+      "module": "volatility",
+      "handler": "arch_garch_fit",
+      "tags": [
+        "volatility"
+      ],
+      "input_schema": {
+        "returns": "records (index, columns, data) or list[float]",
+        "column": "optional column name",
+        "returns_type": "log|simple",
+        "freq": "str (e.g., D, M, Q)",
+        "resample_method": "ffill|last",
+        "dropna": "bool",
+        "prices": "records (index, columns, data) or DataFrame",
+        "tickers": "list[str]",
+        "start": "YYYY-MM-DD",
+        "end": "YYYY-MM-DD",
+        "source": "yahoo|fred|csv",
+        "local_path": "optional path to CSV",
+        "date_col": "optional date column name",
+        "price_field": "Adj Close",
+        "model": "ARCH|GARCH",
+        "p": "int",
+        "q": "int"
+      },
+      "output_schema": {
+        "model": "str",
+        "params": "dict",
+        "conditional_volatility": "list[float]",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "volatility.cumulative_volatility",
+      "description": "Expanding window volatility series.",
+      "module": "volatility",
+      "handler": "cumulative_volatility",
+      "tags": [
+        "volatility"
+      ],
+      "input_schema": {
+        "returns": "records (index, columns, data) or list[float]",
+        "column": "optional column name",
+        "returns_type": "log|simple",
+        "freq": "str (e.g., D, M, Q)",
+        "resample_method": "ffill|last",
+        "dropna": "bool",
+        "prices": "records (index, columns, data) or DataFrame",
+        "tickers": "list[str]",
+        "start": "YYYY-MM-DD",
+        "end": "YYYY-MM-DD",
+        "source": "yahoo|fred|csv",
+        "local_path": "optional path to CSV",
+        "date_col": "optional date column name",
+        "price_field": "Adj Close"
+      },
+      "output_schema": {
+        "values": "list[float]",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "volatility.ewma_volatility",
+      "description": "EWMA volatility series from returns.",
+      "module": "volatility",
+      "handler": "ewma_volatility",
+      "tags": [
+        "volatility"
+      ],
+      "input_schema": {
+        "returns": "records (index, columns, data) or list[float]",
+        "column": "optional column name",
+        "returns_type": "log|simple",
+        "freq": "str (e.g., D, M, Q)",
+        "resample_method": "ffill|last",
+        "dropna": "bool",
+        "prices": "records (index, columns, data) or DataFrame",
+        "tickers": "list[str]",
+        "start": "YYYY-MM-DD",
+        "end": "YYYY-MM-DD",
+        "source": "yahoo|fred|csv",
+        "local_path": "optional path to CSV",
+        "date_col": "optional date column name",
+        "price_field": "Adj Close",
+        "lambda": "float (0-1)",
+        "alpha": "float (0-1)"
+      },
+      "output_schema": {
+        "alpha": "float",
+        "values": "list[float]",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "volatility.historical_volatility",
+      "description": "Compute sample and annualized volatility.",
+      "module": "volatility",
+      "handler": "historical_volatility",
+      "tags": [
+        "volatility"
+      ],
+      "input_schema": {
+        "returns": "records (index, columns, data) or list[float]",
+        "column": "optional column name",
+        "returns_type": "log|simple",
+        "freq": "str (e.g., D, M, Q)",
+        "resample_method": "ffill|last",
+        "dropna": "bool",
+        "prices": "records (index, columns, data) or DataFrame",
+        "tickers": "list[str]",
+        "start": "YYYY-MM-DD",
+        "end": "YYYY-MM-DD",
+        "source": "yahoo|fred|csv",
+        "local_path": "optional path to CSV",
+        "date_col": "optional date column name",
+        "price_field": "Adj Close",
+        "annualization_factor": "float"
+      },
+      "output_schema": {
+        "daily_volatility": "float",
+        "annualized_volatility": "float",
+        "returns": "list[float]",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "volatility.moving_volatility",
+      "description": "Rolling window volatility series.",
+      "module": "volatility",
+      "handler": "moving_volatility",
+      "tags": [
+        "volatility"
+      ],
+      "input_schema": {
+        "returns": "records (index, columns, data) or list[float]",
+        "column": "optional column name",
+        "returns_type": "log|simple",
+        "freq": "str (e.g., D, M, Q)",
+        "resample_method": "ffill|last",
+        "dropna": "bool",
+        "prices": "records (index, columns, data) or DataFrame",
+        "tickers": "list[str]",
+        "start": "YYYY-MM-DD",
+        "end": "YYYY-MM-DD",
+        "source": "yahoo|fred|csv",
+        "local_path": "optional path to CSV",
+        "date_col": "optional date column name",
+        "price_field": "Adj Close",
+        "windows": "list[int]"
+      },
+      "output_schema": {
+        "windows": "list[dict(window, values)]",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "volatility.volatility_forecast_comparison",
+      "description": "Compare EWMA, ARCH, and GARCH volatility forecasts.",
+      "module": "volatility",
+      "handler": "volatility_forecast_comparison",
+      "tags": [
+        "volatility"
+      ],
+      "input_schema": {
+        "returns": "records (index, columns, data) or list[float]",
+        "column": "optional column name",
+        "returns_type": "log|simple",
+        "freq": "str (e.g., D, M, Q)",
+        "resample_method": "ffill|last",
+        "dropna": "bool",
+        "prices": "records (index, columns, data) or DataFrame",
+        "tickers": "list[str]",
+        "start": "YYYY-MM-DD",
+        "end": "YYYY-MM-DD",
+        "source": "yahoo|fred|csv",
+        "local_path": "optional path to CSV",
+        "date_col": "optional date column name",
+        "price_field": "Adj Close",
+        "lookback": "int",
+        "lambda": "float (0-1)",
+        "arch_params": "dict (omega, alpha1)",
+        "garch_params": "dict (omega, alpha1, beta1)"
+      },
+      "output_schema": {
+        "ewma": "list[float]",
+        "arch": "list[float]",
+        "garch": "list[float]",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "options.asset_or_nothing",
+      "description": "Asset-or-nothing binary option price.",
+      "module": "options",
+      "handler": "asset_or_nothing",
+      "tags": [
+        "options"
+      ],
+      "input_schema": {
+        "spot": "float",
+        "strike": "float",
+        "tau": "float (years)",
+        "rate": "float",
+        "div_yield": "float",
+        "vol": "float",
+        "option_type": "call|put"
+      },
+      "output_schema": {
+        "price": "float",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "options.binary_cash_or_nothing",
+      "description": "Cash-or-nothing binary option price.",
+      "module": "options",
+      "handler": "binary_cash_or_nothing",
+      "tags": [
+        "options"
+      ],
+      "input_schema": {
+        "spot": "float",
+        "strike": "float",
+        "tau": "float (years)",
+        "rate": "float",
+        "div_yield": "float",
+        "vol": "float",
+        "payout": "float",
+        "option_type": "call|put"
+      },
+      "output_schema": {
+        "price": "float",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "options.binary_cash_or_nothing_delta",
+      "description": "Delta of cash-or-nothing binary option.",
+      "module": "options",
+      "handler": "binary_cash_or_nothing_delta",
+      "tags": [
+        "options"
+      ],
+      "input_schema": {
+        "spot": "float",
+        "strike": "float",
+        "tau": "float (years)",
+        "rate": "float",
+        "div_yield": "float",
+        "vol": "float",
+        "payout": "float",
+        "option_type": "call|put"
+      },
+      "output_schema": {
+        "delta": "float",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "options.binary_replication",
+      "description": "Binary option replication using call spreads.",
+      "module": "options",
+      "handler": "binary_replication",
+      "tags": [
+        "options"
+      ],
+      "input_schema": {
+        "spots": "list[float]",
+        "strike": "float",
+        "tau": "float (years)",
+        "rate": "float",
+        "div_yield": "float",
+        "vol": "float",
+        "payout": "float",
+        "epsilons": "list[float]"
+      },
+      "output_schema": {
+        "spots": "list[float]",
+        "curves": "list[dict(epsilon, values)]",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "options.binary_replication_delta",
+      "description": "Binary replication delta curve.",
+      "module": "options",
+      "handler": "binary_replication_delta",
+      "tags": [
+        "options"
+      ],
+      "input_schema": {
+        "spots": "list[float]",
+        "strike": "float",
+        "tau": "float (years)",
+        "rate": "float",
+        "div_yield": "float",
+        "vol": "float",
+        "payout": "float",
+        "epsilon": "float",
+        "option_type": "call|put"
+      },
+      "output_schema": {
+        "spots": "list[float]",
+        "delta": "list[float]",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "options.bsm_price",
+      "description": "Black-Scholes price for European call and put.",
+      "module": "options",
+      "handler": "bsm_price",
+      "tags": [
+        "options"
+      ],
+      "input_schema": {
+        "spot": "float",
+        "strike": "float",
+        "tau": "float (years)",
+        "rate": "float",
+        "vol": "float",
+        "div_yield": "float"
+      },
+      "output_schema": {
+        "call": "float",
+        "put": "float",
+        "inputs": "dict",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "options.bsm_price_curve",
+      "description": "Option price curve by varying one parameter.",
+      "module": "options",
+      "handler": "bsm_price_curve",
+      "tags": [
+        "options"
+      ],
+      "input_schema": {
+        "vary": "strike|spot|tau",
+        "values": "list[float]",
+        "spot": "float",
+        "strike": "float",
+        "tau": "float (years)",
+        "rate": "float",
+        "vol": "float",
+        "div_yield": "float"
+      },
+      "output_schema": {
+        "vary": "str",
+        "values": "list[float]",
+        "call": "list[float]",
+        "put": "list[float]",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "options.bsm_price_surface",
+      "description": "Option price surface over spots and maturities.",
+      "module": "options",
+      "handler": "bsm_price_surface",
+      "tags": [
+        "options"
+      ],
+      "input_schema": {
+        "spots": "list[float]",
+        "taus": "list[float]",
+        "strike": "float",
+        "rate": "float",
+        "vol": "float",
+        "div_yield": "float"
+      },
+      "output_schema": {
+        "spots": "list[float]",
+        "taus": "list[float]",
+        "call": "list[list[float]]",
+        "put": "list[list[float]]",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "options.fx_option_price",
+      "description": "FX option price under Black-Scholes.",
+      "module": "options",
+      "handler": "fx_option_price",
+      "tags": [
+        "options"
+      ],
+      "input_schema": {
+        "spot": "float",
+        "strike": "float",
+        "tau": "float (years)",
+        "rate_domestic": "float",
+        "rate_foreign": "float",
+        "vol": "float",
+        "option_type": "call|put"
+      },
+      "output_schema": {
+        "price": "float",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "options.implied_vol_bisection",
+      "description": "Implied volatility via bisection.",
+      "module": "options",
+      "handler": "implied_vol_bisection",
+      "tags": [
+        "options"
+      ],
+      "input_schema": {
+        "option_type": "call|put",
+        "price": "float",
+        "spot": "float",
+        "strike": "float",
+        "rate": "float",
+        "tau": "float (years)",
+        "div_yield": "float",
+        "precision": "float",
+        "max_iter": "int",
+        "vol_low": "float",
+        "vol_high": "float"
+      },
+      "output_schema": {
+        "implied_vol": "float",
+        "iterations": "int",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "options.implied_vol_smile",
+      "description": "Implied volatility smile from option dataset (requires local_path; no datasets bundled).",
+      "module": "options",
+      "handler": "implied_vol_smile",
+      "tags": [
+        "options"
+      ],
+      "input_schema": {
+        "dataset": "str (built-in dataset name)",
+        "local_path": "optional path to CSV",
+        "date": "YYYY-MM-DD",
+        "rate": "float",
+        "method": "bisection|mibian"
+      },
+      "output_schema": {
+        "strike": "list[float]",
+        "implied_vol": "list[float]",
+        "date": "str or None",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "options.payoff_pnl",
+      "description": "Payoff and PnL curves for vanilla options.",
+      "module": "options",
+      "handler": "payoff_pnl",
+      "tags": [
+        "options"
+      ],
+      "input_schema": {
+        "strike": "float",
+        "option_type": "call|put",
+        "position": "long|short",
+        "premium": "float",
+        "spot_min": "float",
+        "spot_max": "float",
+        "num": "int"
+      },
+      "output_schema": {
+        "spot": "list[float]",
+        "payoff": "list[float]",
+        "pnl": "list[float]",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "binomial.convergence_vs_bsm",
+      "description": "Binomial price convergence versus Black-Scholes.",
+      "module": "binomial",
+      "handler": "convergence_vs_bsm",
+      "tags": [
+        "binomial"
+      ],
+      "input_schema": {
+        "steps": "list[int]",
+        "spot": "float",
+        "strike": "float",
+        "rate": "float",
+        "div_yield": "float",
+        "vol": "float",
+        "tau": "float (years)",
+        "option_type": "call|put",
+        "tree": "CRR|JD|LR"
+      },
+      "output_schema": {
+        "steps": "list[int]",
+        "binomial": "list[float]",
+        "bsm": "float",
+        "discrepancy_pct": "list[float]",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "binomial.price",
+      "description": "Binomial tree option price with optional tree output.",
+      "module": "binomial",
+      "handler": "price",
+      "tags": [
+        "binomial"
+      ],
+      "input_schema": {
+        "steps": "int",
+        "spot": "float",
+        "strike": "float",
+        "rate": "float",
+        "vol": "float",
+        "tau": "float (years)",
+        "div_yield": "float",
+        "option_type": "call|put",
+        "exercise": "european|american",
+        "tree": "CRR|JD|LR",
+        "return_tree": "bool"
+      },
+      "output_schema": {
+        "price": "float",
+        "stock_tree": "list[list[float]] (optional)",
+        "option_tree": "list[list[float]] (optional)",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "binomial.price_surface",
+      "description": "Binomial price surface over spots and maturities.",
+      "module": "binomial",
+      "handler": "price_surface",
+      "tags": [
+        "binomial"
+      ],
+      "input_schema": {
+        "spots": "list[float]",
+        "taus": "list[float]",
+        "steps": "int",
+        "strike": "float",
+        "rate": "float",
+        "div_yield": "float",
+        "vol": "float",
+        "option_type": "call|put",
+        "exercise": "european|american",
+        "tree": "CRR|JD|LR"
+      },
+      "output_schema": {
+        "spots": "list[float]",
+        "taus": "list[float]",
+        "prices": "list[list[float]]",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "binomial.terminal_distribution",
+      "description": "Terminal price distribution from binomial tree.",
+      "module": "binomial",
+      "handler": "terminal_distribution",
+      "tags": [
+        "binomial"
+      ],
+      "input_schema": {
+        "steps": "int",
+        "spot": "float",
+        "rate": "float",
+        "vol": "float",
+        "tau": "float (years)",
+        "tree": "CRR|JD|LR",
+        "div_yield": "float"
+      },
+      "output_schema": {
+        "prices": "list[float]",
+        "probabilities": "list[float]",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "greeks.delta_surface",
+      "description": "Delta surface over spot and maturity grid.",
+      "module": "greeks",
+      "handler": "delta_surface",
+      "tags": [
+        "greeks"
+      ],
+      "input_schema": {
+        "spot_min": "float",
+        "spot_max": "float",
+        "spot_num": "int",
+        "tau_min": "float",
+        "tau_max": "float",
+        "tau_num": "int",
+        "strike": "float",
+        "rate": "float",
+        "vol": "float",
+        "div_yield": "float"
+      },
+      "output_schema": {
+        "spots": "list[float]",
+        "taus": "list[float]",
+        "call_delta": "list[list[float]]",
+        "put_delta": "list[list[float]]",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "greeks.gamma_surface",
+      "description": "Gamma surface over spot and maturity grid.",
+      "module": "greeks",
+      "handler": "gamma_surface",
+      "tags": [
+        "greeks"
+      ],
+      "input_schema": {
+        "spot_min": "float",
+        "spot_max": "float",
+        "spot_num": "int",
+        "tau_min": "float",
+        "tau_max": "float",
+        "tau_num": "int",
+        "strike": "float",
+        "rate": "float",
+        "vol": "float",
+        "div_yield": "float"
+      },
+      "output_schema": {
+        "spots": "list[float]",
+        "taus": "list[float]",
+        "gamma": "list[list[float]]",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "greeks.rho_surface",
+      "description": "Rho surface over spot and maturity grid.",
+      "module": "greeks",
+      "handler": "rho_surface",
+      "tags": [
+        "greeks"
+      ],
+      "input_schema": {
+        "spot_min": "float",
+        "spot_max": "float",
+        "spot_num": "int",
+        "tau_min": "float",
+        "tau_max": "float",
+        "tau_num": "int",
+        "strike": "float",
+        "rate": "float",
+        "vol": "float",
+        "div_yield": "float"
+      },
+      "output_schema": {
+        "spots": "list[float]",
+        "taus": "list[float]",
+        "call_rho": "list[list[float]]",
+        "put_rho": "list[list[float]]",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "greeks.theta_surface",
+      "description": "Theta surface over spot and maturity grid.",
+      "module": "greeks",
+      "handler": "theta_surface",
+      "tags": [
+        "greeks"
+      ],
+      "input_schema": {
+        "spot_min": "float",
+        "spot_max": "float",
+        "spot_num": "int",
+        "tau_min": "float",
+        "tau_max": "float",
+        "tau_num": "int",
+        "strike": "float",
+        "rate": "float",
+        "vol": "float",
+        "div_yield": "float"
+      },
+      "output_schema": {
+        "spots": "list[float]",
+        "taus": "list[float]",
+        "call_theta": "list[list[float]]",
+        "put_theta": "list[list[float]]",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "greeks.vega_surface",
+      "description": "Vega surface over spot and maturity grid.",
+      "module": "greeks",
+      "handler": "vega_surface",
+      "tags": [
+        "greeks"
+      ],
+      "input_schema": {
+        "spot_min": "float",
+        "spot_max": "float",
+        "spot_num": "int",
+        "tau_min": "float",
+        "tau_max": "float",
+        "tau_num": "int",
+        "strike": "float",
+        "rate": "float",
+        "vol": "float",
+        "div_yield": "float"
+      },
+      "output_schema": {
+        "spots": "list[float]",
+        "taus": "list[float]",
+        "vega": "list[list[float]]",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "var.discrete_var",
+      "description": "Discrete VaR from payout distribution.",
+      "module": "var",
+      "handler": "discrete_var",
+      "tags": [
+        "var"
+      ],
+      "input_schema": {
+        "payouts": "list[float]",
+        "probabilities": "list[float]",
+        "confidence": "float"
+      },
+      "output_schema": {
+        "var": "float",
+        "sorted": "dict (payouts, probabilities)",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "var.historical_parametric",
+      "description": "Historical and parametric VaR from returns.",
+      "module": "var",
+      "handler": "historical_parametric",
+      "tags": [
+        "var"
+      ],
+      "input_schema": {
+        "prices": "records (index, columns, data) or DataFrame",
+        "tickers": "list[str]",
+        "start": "YYYY-MM-DD",
+        "end": "YYYY-MM-DD",
+        "source": "yahoo|fred|csv",
+        "local_path": "optional path to CSV",
+        "date_col": "optional date column name",
+        "price_field": "Adj Close",
+        "returns": "list[float]",
+        "confidence_levels": "list[float]"
+      },
+      "output_schema": {
+        "mean": "float",
+        "std": "float",
+        "historical": "list[dict(confidence, var)]",
+        "parametric": "list[dict(confidence, var)]",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "var.mc_var",
+      "description": "Monte Carlo VaR from normal return draws.",
+      "module": "var",
+      "handler": "mc_var",
+      "tags": [
+        "var"
+      ],
+      "input_schema": {
+        "expected_return": "float",
+        "sigma": "float",
+        "time_step": "int",
+        "trials": "int",
+        "confidence": "float",
+        "initial_investment": "float",
+        "seed": "int"
+      },
+      "output_schema": {
+        "var": "float",
+        "mean_return": "float",
+        "std_return": "float",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "var.portfolio_var_normal",
+      "description": "Portfolio VaR with normal/lognormal approximation.",
+      "module": "var",
+      "handler": "portfolio_var_normal",
+      "tags": [
+        "var"
+      ],
+      "input_schema": {
+        "prices": "records (index, columns, data) or DataFrame",
+        "tickers": "list[str]",
+        "start": "YYYY-MM-DD",
+        "end": "YYYY-MM-DD",
+        "source": "yahoo|fred|csv",
+        "local_path": "optional path to CSV",
+        "date_col": "optional date column name",
+        "price_field": "Adj Close",
+        "confidence": "float",
+        "holding_period": "int",
+        "initial_investment": "float",
+        "weights": "list[float]"
+      },
+      "output_schema": {
+        "portfolio_mean": "float",
+        "portfolio_vol": "float",
+        "var_normal": "float",
+        "var_lognormal": "float",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "portfolio.capm_beta",
+      "description": "CAPM beta and systematic risk decomposition (requires local_path or provided data; no datasets bundled).",
+      "module": "portfolio",
+      "handler": "capm_beta",
+      "tags": [
+        "portfolio"
+      ],
+      "input_schema": {
+        "data": "records (index, columns, data)",
+        "dataset": "str (built-in dataset name)",
+        "local_path": "optional path to CSV/XLSX"
+      },
+      "output_schema": {
+        "beta": "dict",
+        "systematic_vol": "dict",
+        "systematic_pct": "dict",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "portfolio.efficient_frontier",
+      "description": "Efficient frontier from portfolio statistics (requires local_path or provided data; no datasets bundled).",
+      "module": "portfolio",
+      "handler": "efficient_frontier",
+      "tags": [
+        "portfolio"
+      ],
+      "input_schema": {
+        "data": "records (index, columns, data)",
+        "dataset": "str (built-in dataset name)",
+        "local_path": "optional path to CSV/XLSX",
+        "allow_short": "bool",
+        "rp_min": "float",
+        "rp_max": "float",
+        "num": "int"
+      },
+      "output_schema": {
+        "rp_range": "list[float]",
+        "volatility": "list[float]",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "portfolio.gmvp_analytic",
+      "description": "Analytic global minimum variance portfolio (requires local_path or provided data; no datasets bundled).",
+      "module": "portfolio",
+      "handler": "gmvp_analytic",
+      "tags": [
+        "portfolio"
+      ],
+      "input_schema": {
+        "data": "records (index, columns, data)",
+        "dataset": "str (built-in dataset name)",
+        "local_path": "optional path to CSV/XLSX",
+        "covariance": "records (index, columns, data)",
+        "mean_returns": "list[float]"
+      },
+      "output_schema": {
+        "weights": "list[float]",
+        "volatility": "float",
+        "return": "float",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "portfolio.portfolio_stats",
+      "description": "Portfolio mean/vol/covariance/correlation statistics (requires local_path or provided data; no datasets bundled).",
+      "module": "portfolio",
+      "handler": "portfolio_stats",
+      "tags": [
+        "portfolio"
+      ],
+      "input_schema": {
+        "data": "records (index, columns, data)",
+        "dataset": "str (built-in dataset name)",
+        "local_path": "optional path to CSV/XLSX"
+      },
+      "output_schema": {
+        "mean_returns": "dict",
+        "volatility": "dict",
+        "covariance": "records (index, columns, data)",
+        "correlation": "records (index, columns, data)",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    },
+    {
+      "name": "portfolio.two_asset_frontier",
+      "description": "Two-asset efficient frontiers across correlations (requires local_path or provided data; no datasets bundled).",
+      "module": "portfolio",
+      "handler": "two_asset_frontier",
+      "tags": [
+        "portfolio"
+      ],
+      "input_schema": {
+        "r1": "float",
+        "r2": "float",
+        "vol1": "float",
+        "vol2": "float",
+        "rho_range": "list[float]",
+        "w_min": "float",
+        "w_max": "float",
+        "w_num": "int"
+      },
+      "output_schema": {
+        "frontiers": "list[dict]",
+        "artifacts": "list",
+        "warnings": "list"
+      }
+    }
+  ]
+}
